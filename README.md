@@ -9,17 +9,17 @@ Here, we introduce MAEST, a novel graph neural network model designed to address
 Extensive experiments across diverse datasets, including the human brain, breast cancer, mouse hippocampus, olfactory bulb, brain, and embryo, demonstrate that MAEST outperforms seven state-of-the-art methods in spatial domain identification. Furthermore, MAEST showcases its ability to integrate multi-slice data, identifying joint domains across horizontal tissue sections with high accuracy. These results highlight MAEST’s versatility and effectiveness in unraveling the spatial organization of complex tissues.
 
 # Software dependencies
-python==3.10.13
-numpy==1.26.3
-scanpy==1.9.6
-anndata==0.10.4
-rpy2==3.5.11
-pandas==2.1.4
-scipy==1.11.4
-scikit-learn==1.1.1
-pytorch==1.13.1(cuda==11.7)
-DGL==2.0.0(cuda==11.7)
-R==4.2.3
-mclust==6.0.1
+- python==3.10.13
+- numpy==1.26.3
+- scanpy==1.9.6
+- anndata==0.10.4
+- rpy2==3.5.11
+- pandas==2.1.4
+- scipy==1.11.4
+- scikit-learn==1.1.1
+- pytorch==1.13.1(cuda==11.7)
+- DGL==2.0.0(cuda==11.7)
+- R==4.2.3
+- mclust==6.0.1
 
 To fully reproduce the results as described in the paper, it is recommended to use the container we have provided on a Nvidia RTX 4090 GPU device.
