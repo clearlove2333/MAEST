@@ -24,4 +24,15 @@ Extensive experiments across diverse datasets, including the human brain, breast
 
 To fully reproduce the results as described in the paper, it is recommended to use the container we have provided on a Nvidia RTX 4090 GPU device.
 
-## 
+## Example
+For quick start, you could run the scripts: 
+```bash
+sh run_DLPFC.sh  # default use of 151673 slice
+```
+
+or
+
+```bash
+python DLPFC.py --device <gpu_id> --sample <slice_id>
+# example: python DLPFC.py --device 0 --sample 151673
+```
