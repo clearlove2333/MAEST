@@ -26,7 +26,6 @@ class Function():
         self._device = device
         self.n_clusters = n_clusters
         if(self._datatype == "DLPFC"):
-            #python使用相对路径时，当前路径是main函数的路径
             self.file_fold = '/zhupengfei/STExperiment/Data/GraphST/1.DLPFC/' + str(self._sample) #please replace 'file_fold' with the download path
         if(self._datatype == 'HBC'):
             self.file_fold = '/zhupengfei/STModel/Data/GraphST/3.Human_Breast_Cancer'
@@ -44,11 +43,6 @@ class Function():
             self.file_fold = '/zhupengfei/STExperiment/Data/GraphST/5.Mouse_Olfactory/'
         if(self._datatype == "Mouse_HT"):
             self.file_fold = '/zhupengfei/STExperiment/Data/GraphST/6.Mouse_Hippocampus_Tissue/'
-
-        # if(self._datatype == "MBS2"):
-        #     self.file_fold = '/zhupengfei/STModel/Data/GraphST/Mouse_Brain_Merge_Anterior_Posterior/'
-
-        # os.environ['R_HOME'] = 'C:\\Program Files\\R\\R-4.3.1'
 
     def loadData(self):
         '''Reading ST data'''
@@ -72,7 +66,6 @@ class Function():
         return adata
 
     def process(self,adata):
-        '''预处理数据'''
         device = self._device
         adata = adata.copy()
         if 'highly_variable' not in adata.var.keys():
@@ -87,12 +80,9 @@ class Function():
         if 'feat' not in adata.obsm.keys():
             get_feature(adata)
 
-        # 初始化数据结束，进行赋值
-        #spot*3000
+
         features = torch.FloatTensor(adata.obsm['feat'].copy())
-        #对称邻接矩阵
         adj = adata.obsm['adj']
-        #单向邻接矩阵
         graph_neigh = torch.FloatTensor(adata.obsm['graph_neigh'].copy() + np.eye(adj.shape[0]))
 
         if self._datatype in ['Stereo', 'Slide']:
@@ -100,8 +90,6 @@ class Function():
             print('Building sparse matrix ...')
             adj = preprocess_adj_sparse(adj).to(device)
         else:
-            # standard version
-            # 加上自环
             adj = preprocess_adj(adj)
             adj = torch.FloatTensor(adj).to(device)
 
@@ -111,13 +99,10 @@ class Function():
         model.eval()
 
         with torch.no_grad():
-            # x为隐藏层
             if(power > 0):
                 x = model.embed_power(graph.to(device), x.to(device), power).detach().cpu().numpy()
             else:
                 x = model.embed(graph.to(device), x.to(device)).detach().cpu().numpy()
-            # x为重构的表达谱
-            # x = model.recon(graph.to(device), x.to(device)).detach().cpu().numpy()
 
         adata.obsm['emb'] = x
         # print(x)
@@ -154,13 +139,10 @@ class Function():
         model.eval()
 
         with torch.no_grad():
-            # x为隐藏层
             if(power > 0):
                 x = model.embed_power(graph.to(device), x.to(device), power).detach().cpu().numpy()
             else:
                 x = model.embed(graph.to(device), x.to(device)).detach().cpu().numpy()
-            # x为重构的表达谱
-            # x = model.recon(graph.to(device), x.to(device)).detach().cpu().numpy()
 
         adata.obsm['emb'] = x
         # print(x)
@@ -240,13 +222,6 @@ class Function():
 
         adata.write(path + sample + '.h5ad',compression="gzip")
 
-        # # calculate metric ARI
-        # ARI = metrics.adjusted_rand_score(adata.obs['domain'], adata.obs['ground_truth'])
-        # adata.uns['ARI'] = ARI
-
-        # print('Sample:', self._sample)
-        # print('ARI:', ARI)
-
     
     def clusting_no_label(self, adata, model, graph, x, power, device, refinement=False):
         model.eval()
@@ -257,8 +232,6 @@ class Function():
                 x = model.embed_power(graph.to(device), x.to(device), power).detach().cpu().numpy()
             else:
                 x = model.embed(graph.to(device), x.to(device)).detach().cpu().numpy()
-            # x为重构的表达谱
-            # x = model.recon(graph.to(device), x.to(device)).detach().cpu().numpy()
 
         adata.obsm['emb'] = x
 
@@ -297,17 +270,6 @@ class Function():
         #计算聚类数目
         n_clusters = len(unique_label)
 
-        #绘图
-        # fig, ax = plt.subplots(figsize=(4, 4))
-        # sc.pl.spatial(adata,
-        #                 ax=ax,
-        #                 img_key="hires",
-        #                 color=["ground_truth"],
-        #                 title=["Ground truth"],
-        #                 show=False)
-        
-        # plt.savefig("./results/" + self._datatype + "/Ground_truth.png")
-
         return n_clusters, adata
     
     def refine_label(self, adata, radius=50, key='label'):
@@ -331,7 +293,6 @@ class Function():
             new_type.append(max_type)
             
         new_type = [str(i) for i in list(new_type)]    
-        #adata.obs['label_refined'] = np.array(new_type)
         
         return new_type
 
@@ -345,16 +306,6 @@ class Function():
         # plotting spatial clustering result
         adata.obs['domain'] = adata.obs['domain'].astype(str)
 
-        # fig,ax=plt.subplots(1,2,figsize=(20,8))# 默认的图太小，需要修改这个figsize
-        # sc.pl.spatial(adata1,title="Section_1",ax=ax[0],show=False)# 一定要加入show=False
-        # sc.pl.spatial(adata2,title="Section_2",ax=ax[1],show=False)# 一定要加入show=False
-
-        # sc.pl.spatial(adata,
-        #                 img_key="hires",
-        #                 color=["ground_truth", "domain"],
-        #                 title=["Ground truth", "ARI=%.4f" % ari],
-        #                 show=False)
-
         fig, ax = plt.subplots(figsize=(10, 4))
         sc.pl.spatial(adata,
                         ax=ax,
@@ -367,12 +318,7 @@ class Function():
 
 
     def plot_no_label(self, model, adata, graph, x, power, device, epoch, refinement=False):
-
-        #mclust聚类
         self.clusting_no_label(adata, model, graph, x, power, device)
-
-        # filter out NA nodes
-        # adata = adata[~pd.isnull(adata.obs['ground_truth'])]
 
         # plotting spatial clustering result
         import seaborn as sns
@@ -381,7 +327,7 @@ class Function():
 
         plt.rcParams["figure.figsize"] = (12, 6)
         fig, ax = plt.subplots()
-        fig.subplots_adjust(left=0.05, right=0.85)  # 调整左边缘的边距
+        fig.subplots_adjust(left=0.05, right=0.85) 
 
         sc.pl.embedding(adata, basis="spatial",
                         color="domain",
@@ -393,9 +339,3 @@ class Function():
                         )
         
         plt.savefig("./results/" + self._datatype + "/" + str(epoch) + ".png")
-
-        # plotting predicted labels by UMAP
-        # sc.pp.neighbors(adata, use_rep='emb_pca', n_neighbors=10)
-        # sc.tl.umap(adata)
-        # sc.pl.umap(adata, color='domain', title=['Predicted labels'], show=False)
-        # plt.savefig("./plots/" + sample + "kmean_umap.png")

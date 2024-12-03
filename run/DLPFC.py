@@ -41,16 +41,16 @@ def main(args):
     samples = args.sample
 
     seeds_ari_list = []
-    # 遍历seed
+
     for i, seed in enumerate(seeds):
 
         samples_ari_list = []
         for i, sample in enumerate(samples):
-            #初始化模型
+
             function = Function(sample,dataset)
             adata = function.loadData()
             adata, u, v = function.process(adata)
-            #创建dgl数据
+
             graph = dgl.graph((torch.tensor(u), torch.tensor(v)))
             if(args.self_loop):
                 graph = dgl.add_self_loop(graph)
@@ -66,7 +66,7 @@ def main(args):
             else:
                 logger = None
 
-            # 创建模型
+
             model = build_model(args)
             model.to(device)
             #power
@@ -75,7 +75,7 @@ def main(args):
             else:
                 power = 0
 
-            #加载模型
+
             # args.load_model = True
 
             if args.load_model:
