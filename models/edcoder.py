@@ -181,14 +181,6 @@ class PreModel(nn.Module):
             nn.Linear(num_hidden, num_hidden)
         )
 
-        # 测试修改掩码模块的project
-        # self.predictor = nn.Sequential(
-        #     nn.PReLU(),
-        #     nn.Linear(num_hidden, 3000),
-        #     nn.PReLU(),
-        #     nn.Linear(3000, 3000)
-        # )
-
         self.encoder_ema = setup_module(
             m_type=encoder_type,
             enc_dec="encoding",
@@ -272,14 +264,11 @@ class PreModel(nn.Module):
     
         with torch.no_grad():
             drop_g2 = drop_g2 if drop_g2 is not None else g
-            #encoder_ema是和encoder结构一样的编码器
-            #未掩码数据作为对比
             latent_target = self.encoder_ema(drop_g2, x,)
     
             if targets is not None:
                 latent_target = self.projector_ema(latent_target[targets])
             else:
-                #projector_ema一层全连接的自编码器
                 latent_target = self.projector_ema(latent_target[keep_nodes])
     
         if targets is not None:
@@ -288,25 +277,16 @@ class PreModel(nn.Module):
             loss_latent = sce_loss(latent_pred, latent_target, 1)
         else:
             latent_pred = self.projector(enc_rep[keep_nodes])
-            #修改为mask_nodes
-            # latent_pred = self.projector(enc_rep[mask_nodes])
             latent_pred = self.predictor(latent_pred)
-            # 原loss
             loss_latent = sce_loss(latent_pred, latent_target, 1)
-            # 测试修改掩码模块的project
-            # loss_latent = sce_loss(latent_pred, x[keep_nodes], 1)
-            # # 测试修改掩码模块的project
-            # loss_latent = sce_loss(latent_pred, x[mask_nodes], 1)
+
     
         # ---- attribute reconstruction ----
         origin_rep = self.encoder_to_decoder(enc_rep)
     
         loss_rec_all = 0
         if self._remask_method == "random":
-            #尝试不同大小的重掩码
-            # muti_remask_rate = 0.5
             for i in range(self._num_remasking):
-                #_num_remasking：重掩码的层数
                 rep = origin_rep.clone()
                 rep, remask_nodes, rekeep_nodes = self.random_remask(use_g, rep, self._remask_rate)
                 # rep, remask_nodes, rekeep_nodes = self.random_remask(use_g, rep, muti_remask_rate)
@@ -337,12 +317,10 @@ class PreModel(nn.Module):
         return loss
 
     def DGI(self, g, x):
-        '''使用Dink-net DGI降维'''
 
         # augmentations
         x_aug = aug_feature_dropout(x, drop_rate=0.2).squeeze(0)
 
-        # 部分替换负样本
         x_negative = self.encoding_mask_negative(g, x_aug, keep_rate_negative=0)
 
 
@@ -377,15 +355,12 @@ class PreModel(nn.Module):
 
     def embed(self, g, x):
         rep = self.encoder(g, x)
-        # #正则化
-        # rep = F.normalize(rep, p=2, dim=1)
         return rep
     
     def embed_power(self, g, x, power):
-        #多跳维度
-        '''计算encoder和encoder+power层后的聚合特征相加'''
+        #muti-hops
+        '''Calculate the aggregation feature sum of encoder and encoder+power layers'''
         local_h = self.encoder(g,x)
-        #squeeze只能去除维度为1的维度
         feat = local_h.clone().squeeze(0)
 
         norm = torch.pow(g.in_degrees().float().clamp(min=1), -0.5).unsqueeze(1).to(local_h.device)
@@ -397,7 +372,6 @@ class PreModel(nn.Module):
             feat = feat * norm
 
         global_h = feat.unsqueeze(0)
-        #从计算图分离，不计算梯度
         local_h, global_h = map(lambda tmp: tmp.detach(), [local_h, global_h])
 
         h = local_h + global_h
@@ -463,33 +437,13 @@ class PreModel(nn.Module):
 
         return use_g, out_x, (mask_nodes, keep_nodes)
 
-    # def encoding_mask_negative(self, g, x, mask_nodes, keep_nodes, keep_rate_negative=0):
-
-    #     num_nodes = g.num_nodes()
-    #     num_keep_nodes = int(keep_rate_negative * num_nodes)
-
-    #     # 正样本点
-    #     keep_nodes_negative = keep_nodes[: num_keep_nodes]
-    #     # 负样本点
-    #     replace_nodes_negative = torch.cat((mask_nodes, keep_nodes[num_keep_nodes:]), dim=0)
-    #     # 替换节点洗牌
-    #     replace_nodes_perm = torch.randperm(num_nodes, device=x.device)[:replace_nodes_negative.shape[0]]
-
-    #     out_x_negative = x.clone()
-    #     out_x_negative[replace_nodes_negative] = x[replace_nodes_perm]
-    #     out_x_negative[replace_nodes_negative] += self.enc_mask_token
-
-    #     return out_x_negative, (replace_nodes_negative, keep_nodes_negative)
-
     def encoding_mask_negative(self, g, x, keep_rate_negative=0):
-        '''选择一定比例洗牌作为负样本'''
         num_nodes = g.num_nodes()
         perm = torch.randperm(num_nodes, device=x.device)
         num_keep_nodes = int(keep_rate_negative * num_nodes)
         # keep_nodes = perm[: num_keep_nodes]
         replace_nodes = perm[num_keep_nodes :]
         
-        # 替换节点洗牌
         replace_nodes_perm = torch.randperm(num_nodes, device=x.device)[:replace_nodes.shape[0]]
 
         out_x_negative = x.clone()

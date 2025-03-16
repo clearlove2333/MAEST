@@ -315,27 +315,3 @@ class Function():
                         show=False)
         
         plt.savefig("./results/" + self._datatype + "/clusting.png")
-
-
-    def plot_no_label(self, model, adata, graph, x, power, device, epoch, refinement=False):
-        self.clusting_no_label(adata, model, graph, x, power, device)
-
-        # plotting spatial clustering result
-        import seaborn as sns
-        rgb_values = sns.color_palette("tab20", len(adata.obs['domain'].unique()))
-        color_fine = dict(zip(list(adata.obs['domain'].unique()), rgb_values))
-
-        plt.rcParams["figure.figsize"] = (12, 6)
-        fig, ax = plt.subplots()
-        fig.subplots_adjust(left=0.05, right=0.85) 
-
-        sc.pl.embedding(adata, basis="spatial",
-                        color="domain",
-                        s=100,
-                        palette=color_fine,
-                        show=True,
-                        title='Mouse Anterior & Posterior Brain (Section 1)',
-                        ax=ax
-                        )
-        
-        plt.savefig("./results/" + self._datatype + "/" + str(epoch) + ".png")

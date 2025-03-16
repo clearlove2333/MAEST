@@ -22,7 +22,7 @@ logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=lo
 
 def main(args):
     device = args.device if args.device >= 0 else "cpu"
-    print("所用GPU为:",device)
+    print("The GPU used is:",device)
     seeds = args.seeds
     dataset = args.dataset
     max_epoch = args.max_epoch
@@ -35,7 +35,6 @@ def main(args):
     loss_fn = args.loss_fn
     lr = args.lr
     weight_decay = args.weight_decay
-    # save_model = args.save_model
     logs = args.logging
     use_scheduler = args.scheduler
     samples = args.sample
@@ -77,7 +76,6 @@ def main(args):
 
 
             # args.load_model = True
-
             if args.load_model:
                 model.load_state_dict(torch.load("./saved_models/MAEST_" + args.dataset + sample + ".pt"))
                 # ari=function.clusting(adata, model, graph, x, power, device, refinement=True)
@@ -97,17 +95,6 @@ def main(args):
                 scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=scheduler)
             else:
                 scheduler = None
-
-            # if args.wandb:
-            #     if not os.path.exists("./wandb/"):
-            #         os.makedirs("./wandb")
-
-            #     wandb.init(config=args,
-            #             project="MAEST",
-            #             name="baseline_{}".format(dataset),
-            #             dir="./wandb/",
-            #             job_type="training",
-            #             reinit=True)
            
             logging.info("start training..")
             best_ari = 0
@@ -117,10 +104,8 @@ def main(args):
             result_path = Path('./results/' + f'DLPFC/{sample}/')
             result_path.mkdir(parents=True, exist_ok=True)
 
-            # target_nodes = torch.arange(x.shape[0], device=x.device, dtype=torch.long)
             epoch_iter = tqdm(range(max_epoch))
             for epoch in epoch_iter:
-            # for epoch in range(max_epoch):
                 model.train()
                 loss = model(graph, x)
 
@@ -142,19 +127,10 @@ def main(args):
                     if ari > best_ari:
                         best_ari = ari
 
-                        #保存label
-                        # label = adata.obs['domain']
-                        # label.to_csv(os.path.join(result_path,'label.txt'))
-                        # torch.save(model.state_dict(), "./saved_models/MAEST_" + dataset + sample + ".pt")
-
             best_ari = round(best_ari, 2)
             samples_ari_list.append(best_ari)
             if logger is not None:
                 logger.finish()
-
-        # print(samples_ari_list)
-        # samples_final_ari, samples_final_ari_std = np.mean(samples_ari_list), np.std(samples_ari_list)
-        # print(f"# final_ari: {samples_final_ari:.4f}±{samples_final_ari_std:.4f}")
 
 # Press the green button in the gutter to run the script.
 if __name__ == "__main__":

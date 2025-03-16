@@ -64,7 +64,6 @@ def construct_interaction(adata, n_neighbors=3):
     v = []
     for i in range(n_spot):
         vec = distance_matrix[i, :]
-        #返回排序后的索引值
         distance = vec.argsort()
         for t in range(1, n_neighbors + 1):
             y = distance[t]
@@ -72,17 +71,9 @@ def construct_interaction(adata, n_neighbors=3):
             u.append(y)
             v.append(i)
 
-    #单向邻接关系，并且没有自环
     adata.obsm['graph_neigh'] = interaction
 
-    #邻接列表
-    # adata.obsm['u'] = np.array(u)
-    # adata.obsm['v'] = np.array(v)
-    
-    #transform adj to symmetrical adj
     adj = interaction
-    adj = adj + adj.T
-    #这里的adj>1是里面的单个元素
     adj = np.where(adj>1, 1, adj)
     
     adata.obsm['adj'] = adj
@@ -126,11 +117,8 @@ def get_feature(adata, deconvolution=False):
     else:
        feat = adata_Vars.X[:, ] 
     
-    # data augmentation
-    # feat_a = permutation(feat)
-    
     adata.obsm['feat'] = feat
-    # adata.obsm['feat_a'] = feat_a
+
     
 def add_contrastive_label(adata):
     # contrastive label

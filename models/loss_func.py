@@ -164,10 +164,6 @@ def trunc_normal_(tensor, mean=0., std=1., a=-2., b=2.):
     return _no_grad_trunc_normal_(tensor, mean, std, a, b)
 
 
-'''
-以下为新增loss
-'''
-
 class AvgReadout(nn.Module):
     def __init__(self):
         super(AvgReadout, self).__init__()

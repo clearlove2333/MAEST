@@ -61,9 +61,8 @@ def clustering(adata, n_clusters=7, radius=50, key='emb', method='mclust', start
 
     """
 
-    print(f"聚类类别数：{n_clusters}")
+    print(f"Number of clustering categories:{n_clusters}")
     #random_state
-    #降维原来为20
     pca = PCA(n_components=20, random_state=42)
     embedding = pca.fit_transform(adata.obsm['emb'].copy())
     adata.obsm['emb_pca'] = embedding
@@ -112,88 +111,7 @@ def refine_label(adata, radius=50, key='label'):
     
     return new_type
 
-def extract_top_value(map_matrix, retain_percent = 0.1): 
-    '''\
-    Filter out cells with low mapping probability
 
-    Parameters
-    ----------
-    map_matrix : array
-        Mapped matrix with m spots and n cells.
-    retain_percent : float, optional
-        The percentage of cells to retain. The default is 0.1.
-
-    Returns
-    -------
-    output : array
-        Filtered mapped matrix.
-
-    '''
-
-    #retain top 1% values for each spot
-    top_k  = retain_percent * map_matrix.shape[1]
-    output = map_matrix * (np.argsort(np.argsort(map_matrix)) >= map_matrix.shape[1] - top_k)
-    
-    return output 
-
-def construct_cell_type_matrix(adata_sc):
-    label = 'cell_type'
-    n_type = len(list(adata_sc.obs[label].unique()))
-    zeros = np.zeros([adata_sc.n_obs, n_type])
-    cell_type = list(adata_sc.obs[label].unique())
-    cell_type = [str(s) for s in cell_type]
-    cell_type.sort()
-    mat = pd.DataFrame(zeros, index=adata_sc.obs_names, columns=cell_type)
-    for cell in list(adata_sc.obs_names):
-        ctype = adata_sc.obs.loc[cell, label]
-        mat.loc[cell, str(ctype)] = 1
-    #res = mat.sum()
-    return mat
-
-def project_cell_to_spot(adata, adata_sc, retain_percent=0.1):
-    '''\
-    Project cell types onto ST data using mapped matrix in adata.obsm
-
-    Parameters
-    ----------
-    adata : anndata
-        AnnData object of spatial data.
-    adata_sc : anndata
-        AnnData object of scRNA-seq reference data.
-    retrain_percent: float    
-        The percentage of cells to retain. The default is 0.1.
-    Returns
-    -------
-    None.
-
-    '''
-    
-    # read map matrix 
-    map_matrix = adata.obsm['map_matrix']   # spot x cell
-   
-    # extract top-k values for each spot
-    map_matrix = extract_top_value(map_matrix) # filtering by spot
-    
-    # construct cell type matrix
-    matrix_cell_type = construct_cell_type_matrix(adata_sc)
-    matrix_cell_type = matrix_cell_type.values
-       
-    # projection by spot-level
-    matrix_projection = map_matrix.dot(matrix_cell_type)
-   
-    # rename cell types
-    cell_type = list(adata_sc.obs['cell_type'].unique())
-    cell_type = [str(s) for s in cell_type]
-    cell_type.sort()
-    #cell_type = [s.replace(' ', '_') for s in cell_type]
-    df_projection = pd.DataFrame(matrix_projection, index=adata.obs_names, columns=cell_type)  # spot x cell type
-    
-    #normalize by row (spot)
-    df_projection = df_projection.div(df_projection.sum(axis=1), axis=0).fillna(0)
-
-    #add projection results to adata
-    adata.obs[df_projection.columns] = df_projection
-    
 def search_res(adata, n_clusters, method='leiden', use_rep='emb', start=0.1, end=3.0, increment=0.01):
     '''\
     Searching corresponding resolution according to given cluster number
