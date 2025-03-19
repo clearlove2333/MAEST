@@ -26,7 +26,7 @@ class Function():
         self._device = device
         self.n_clusters = n_clusters
         if(self._datatype == "DLPFC"):
-            self.file_fold = '/zhupengfei/STExperiment/Data/GraphST/1.DLPFC/' + str(self._sample) #please replace 'file_fold' with the download path
+            self.file_fold = './process/function.py' + str(self._sample) #please replace 'file_fold' with the download path
 
     def loadData(self):
         '''Reading ST data'''
