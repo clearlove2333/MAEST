@@ -122,7 +122,7 @@ def main(args):
                     loss_dict["lr"] = get_current_lr(optimizer)
                     logger.note(loss_dict, step=epoch)
 
-                if (epoch + 1) % 50 == 0:
+                if (epoch + 1) % 100 == 0:
                     ari=function.clusting(adata, model, graph, x, power, device, refinement=True)
                     if ari > best_ari:
                         best_ari = ari

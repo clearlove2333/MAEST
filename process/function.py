@@ -27,22 +27,6 @@ class Function():
         self.n_clusters = n_clusters
         if(self._datatype == "DLPFC"):
             self.file_fold = '/zhupengfei/STExperiment/Data/GraphST/1.DLPFC/' + str(self._sample) #please replace 'file_fold' with the download path
-        if(self._datatype == 'HBC'):
-            self.file_fold = '/zhupengfei/STModel/Data/GraphST/3.Human_Breast_Cancer'
-        if(self._datatype == "MBA"):
-            self.file_fold = '/zhupengfei/STModel/Data/GraphST/2.Mouse_Brain_Anterior'
-        if(self._datatype == "MBM_s1"):
-            self.file_fold = '/zhupengfei/STExperiment/Data/GraphST/9.Mouse_Brain_Merge_Anterior_Posterior_Section_1/'
-        if(self._datatype == "MBM_s2"):
-            self.file_fold = '/zhupengfei/STExperiment/Data/GraphST/10.Mouse_Brain_Merge_Anterior_Posterior_Section_2/'
-        if(self._datatype == "MBC_s1"):
-            self.file_fold = '/zhupengfei/STExperiment/Data/GraphST/7.Mouse_Breast_Cancer_Sample_1/'
-        if(self._datatype == "MBC_s2"):
-            self.file_fold = '/zhupengfei/STExperiment/Data/GraphST/8.Mouse_Breast_Cancer_Sample_2/'
-        if(self._datatype == "Mouse_Olf"):
-            self.file_fold = '/zhupengfei/STExperiment/Data/GraphST/5.Mouse_Olfactory/'
-        if(self._datatype == "Mouse_HT"):
-            self.file_fold = '/zhupengfei/STExperiment/Data/GraphST/6.Mouse_Hippocampus_Tissue/'
 
     def loadData(self):
         '''Reading ST data'''
@@ -54,8 +38,6 @@ class Function():
             adata = sc.read_h5ad(self.file_fold + 'filtered_feature_bc_matrix_200115_08.h5ad')
         else:
             adata = sc.read_visium(self.file_fold, count_file='filtered_feature_bc_matrix.h5', load_images=True)
-        # if(self._datatype == "MBS2"):
-        #     adata = sc.read_h5ad(self.file_fold + 'Mouse_Brain_Serial_Section_2_Sagittal-' + self.sample + '_10xvisium_processed.h5ad')
 
         if(self.n_clusters == 0):    
             n_clusters, adata = self.get_label(adata)
@@ -80,10 +62,7 @@ class Function():
         if 'feat' not in adata.obsm.keys():
             get_feature(adata)
 
-
-        features = torch.FloatTensor(adata.obsm['feat'].copy())
         adj = adata.obsm['adj']
-        graph_neigh = torch.FloatTensor(adata.obsm['graph_neigh'].copy() + np.eye(adj.shape[0]))
 
         if self._datatype in ['Stereo', 'Slide']:
             # using sparse
