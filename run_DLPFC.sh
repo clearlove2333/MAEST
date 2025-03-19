@@ -7,14 +7,12 @@ dataset=$1
 #	--sample "151507" "151508" "151509" "151510" "151669" "151670" "151671" "151672" "151673" "151674" "151675" "151676" \
 
 	# --sample "151507" "151671" "151673" \
-	# --sample "151671" \
-
-# python DLPFC.py \
+	
 
 python DLPFC.py \
 	--device 0 \
 	--dataset $dataset \
-	--sample "151671" \
+	--sample "151673" \
 	--mask_method "random" \
 	--remask_method "random" \
 	--mask_rate 0.3 \
